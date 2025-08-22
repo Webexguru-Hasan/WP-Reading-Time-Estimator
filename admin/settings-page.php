@@ -14,28 +14,30 @@ function wprte_render_settings_page_content() {
 
         <form method="post" action="options.php">
           <?php
-            settings_fields( 'wprte_settings_group' ); // group
-            do_settings_sections( 'wprte-settings' );  // page slug
+            // Match group with register_setting()
+            settings_fields( 'wprte_settings' );    // FIXED: was wprte_settings_group
+            do_settings_sections( 'wprte-settings' );
             submit_button();
           ?>
         </form>
-
     </div>
     <?php
 }
 
 // Register settings, sections, and fields
 add_action( 'admin_init', 'wprte_register_settings' );
+
 function wprte_register_settings() {
     
-    // Register option with the correct page slug
+    // Register option with group = option name (simpler + matches settings_fields)
     register_setting(
-        'wprte_settings_group',   // Group name
-        'wprte_settings',         // Option name
+        'wprte_settings',        // FIXED: same as in settings_fields()
+        'wprte_settings',
         array(
             'sanitize_callback' => 'wprte_sanitize_settings',
         )
     );
+
     add_settings_section(
         'wprte_general_section',
         __( 'General Settings', 'wp-reading-time-estimator' ),
@@ -43,7 +45,7 @@ function wprte_register_settings() {
         'wprte-settings'
     );
 
-    // Field: Post types
+    // === Fields ===
     add_settings_field(
         'wprte_post_types',
         __( 'Post Types', 'wp-reading-time-estimator' ),
@@ -52,7 +54,6 @@ function wprte_register_settings() {
         'wprte_general_section'
     );
 
-    // Field: Reading speed
     add_settings_field(
         'wprte_reading_speed',
         __( 'Reading Speed (words per minute)', 'wp-reading-time-estimator' ),
@@ -61,7 +62,6 @@ function wprte_register_settings() {
         'wprte_general_section'
     );
 
-    // Field: Extra seconds per image
     add_settings_field(
         'wprte_extra_seconds_image',
         __( 'Extra Seconds per Image', 'wp-reading-time-estimator' ),
@@ -70,7 +70,6 @@ function wprte_register_settings() {
         'wprte_general_section'
     );
 
-    // Field: Auto inject location
     add_settings_field(
         'wprte_auto_inject',
         __( 'Auto-inject Location', 'wp-reading-time-estimator' ),
@@ -79,7 +78,6 @@ function wprte_register_settings() {
         'wprte_general_section'
     );
 
-    // Field: Output format
     add_settings_field(
         'wprte_output_format',
         __( 'Output Format', 'wp-reading-time-estimator' ),
@@ -88,7 +86,6 @@ function wprte_register_settings() {
         'wprte_general_section'
     );
 
-    // Field: Schema toggle
     add_settings_field(
         'wprte_enable_schema',
         __( 'Enable Schema Markup', 'wp-reading-time-estimator' ),
@@ -98,7 +95,7 @@ function wprte_register_settings() {
     );
 }
 
-// Sanitize callback
+// === Sanitize callback ===
 function wprte_sanitize_settings( $input ) {
     $output = array();
     $output['post_types']          = array_map( 'sanitize_text_field', (array) ( $input['post_types'] ?? array() ) );
@@ -110,7 +107,7 @@ function wprte_sanitize_settings( $input ) {
     return $output;
 }
 
-// Field render callbacks
+// === Field render callbacks ===
 function wprte_field_post_types() {
     $options = get_option( 'wprte_settings' );
     $selected = $options['post_types'] ?? array( 'post' );
