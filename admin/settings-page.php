@@ -11,13 +11,15 @@ function wprte_render_settings_page_content() {
     ?>
     <div class="wrap">
         <h1><?php echo esc_html__( 'Reading Time Settings', 'wp-reading-time-estimator' ); ?></h1>
+
         <form method="post" action="options.php">
-            <?php
-            settings_fields( 'wprte_settings_group' );
-            do_settings_sections( 'wprte-settings' );
+          <?php
+            settings_fields( 'wprte_settings_group' ); // group
+            do_settings_sections( 'wprte-settings' );  // page slug
             submit_button();
-            ?>
+          ?>
         </form>
+
     </div>
     <?php
 }
@@ -25,9 +27,15 @@ function wprte_render_settings_page_content() {
 // Register settings, sections, and fields
 add_action( 'admin_init', 'wprte_register_settings' );
 function wprte_register_settings() {
-    register_setting( 'wprte_settings_group', 'wprte_settings', 'wprte_sanitize_settings' );
-
-    // Section: General
+    
+    // Register option with the correct page slug
+    register_setting(
+        'wprte_settings_group',   // Group name
+        'wprte_settings',         // Option name
+        array(
+            'sanitize_callback' => 'wprte_sanitize_settings',
+        )
+    );
     add_settings_section(
         'wprte_general_section',
         __( 'General Settings', 'wp-reading-time-estimator' ),

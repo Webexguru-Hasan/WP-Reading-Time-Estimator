@@ -67,6 +67,12 @@ register_activation_hook( __FILE__, array( 'WPRTE_Activator', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'WPRTE_Deactivator', 'deactivate' ) );
 register_uninstall_hook( __FILE__, array( 'WPRTE_Uninstaller', 'uninstall' ) );
 
+// Load Admin Settings Page
+if ( is_admin() ) {
+    require_once plugin_dir_path( __FILE__ ) . 'admin/settings-page.php';
+}
+
+
 /**
 * Load plugin textdomain for translations
 */

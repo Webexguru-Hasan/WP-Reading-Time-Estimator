@@ -28,11 +28,14 @@ class WPRTE_Admin {
 		add_menu_page(
 			__( 'Reading Time', 'wp-reading-time-estimator' ),
 			__( 'Reading Time', 'wp-reading-time-estimator' ),
+            'manage_options',
+    'wprte-settings',
+    'wprte_render_settings_page',  // 👈 this must exist
 			$capability,
 			$slug,
 			array( $this, 'render_settings_page' ),
 			$svg,
-			6
+			65
 		);
 	}
 
@@ -40,6 +43,11 @@ class WPRTE_Admin {
 	 * Render the settings page (delegates to a separate file for Settings API in Step 2).
 	 */
 	public function render_settings_page() {
-		require_once WPRTE_PATH . 'admin/settings-page.php'; // This file will be implemented in Step 2.
-	}
+    require_once WPRTE_PATH . 'admin/settings-page.php';
+
+    if ( function_exists( 'wprte_render_settings_page' ) ) {
+        wprte_render_settings_page();
+    }
+}
+
 }
