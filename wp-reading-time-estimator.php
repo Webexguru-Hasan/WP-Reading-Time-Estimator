@@ -61,6 +61,13 @@ require_once WPRTE_PATH . $map[ $class ];
 } );
 
 /**
+* Activation / Deactivation / Uninstall hooks
+*/
+register_activation_hook( __FILE__, array( 'WPRTE_Activator', 'activate' ) );
+register_deactivation_hook( __FILE__, array( 'WPRTE_Deactivator', 'deactivate' ) );
+register_uninstall_hook( __FILE__, array( 'WPRTE_Uninstaller', 'uninstall' ) );
+
+/**
 * Load plugin textdomain for translations
 */
 function wprte_load_textdomain() {
