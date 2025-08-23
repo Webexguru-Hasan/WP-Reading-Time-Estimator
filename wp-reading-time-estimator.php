@@ -93,7 +93,4 @@ $loader->init();
 }
 add_action( 'plugins_loaded', 'wprte_run', 20 );
 
-
-
-
 ?>

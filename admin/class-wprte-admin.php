@@ -32,7 +32,7 @@ class WPRTE_Admin {
         $slug,
         array( $this, 'render_settings_page' ),
         $icon_url,
-        6
+        80
     );
 }
 

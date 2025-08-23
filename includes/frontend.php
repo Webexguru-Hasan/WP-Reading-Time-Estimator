@@ -8,8 +8,8 @@
 function wprte_calculate_reading_time( $post_id ) {
     $options = get_option( 'wprte_settings', array() );
 
-    $wpm       = ! empty( $options['wpm'] ) ? absint( $options['wpm'] ) : 200;
-    $img_time  = ! empty( $options['image_seconds'] ) ? absint( $options['image_seconds'] ) : 0;
+    $wpm       = ! empty( $options['reading_speed'] ) ? absint( $options['reading_speed'] ) : 200;
+    $img_time  = ! empty( $options['extra_seconds_image'] ) ? absint( $options['extra_seconds_image'] ) : 0;
     $content   = get_post_field( 'post_content', $post_id );
     $word_count = str_word_count( wp_strip_all_tags( $content ) );
 
@@ -41,14 +41,14 @@ function wp_reading_time( $post_id = null ) {
     $text   = sprintf( $format, $minutes );
 
     // Add schema markup if enabled
-    if ( ! empty( $options['schema'] ) ) {
+    if ( ! empty( $options['enable_schema'] ) ) {
         $text .= sprintf(
             '<meta itemprop="timeRequired" content="PT%dM" />',
             $minutes
         );
     }
 
-    return esc_html( $text );
+    return $text;
 }
 
 // Echo function
@@ -57,25 +57,34 @@ function the_reading_time( $post_id = null ) {
 }
 
 // Auto inject into content
+// Auto inject into content
 add_filter( 'the_content', function( $content ) {
     if ( is_admin() ) {
         return $content;
     }
 
-    if ( is_singular() && in_the_loop() && is_main_query() ) {
+    // শুধু singular পেজে চালাই; Elementor/Builder-এ main_query/loop নাও হতে পারে, তাই সেগুলো শর্ত থেকে বাদ দিলাম
+    if ( is_singular() ) {
         $options = get_option( 'wprte_settings', array() );
 
-        // Check post type
-        $post_type = get_post_type();
+         // Check post type
+        $post_type     = get_post_type();
         $enabled_types = ! empty( $options['post_types'] ) ? (array) $options['post_types'] : array( 'post' );
 
         if ( in_array( $post_type, $enabled_types, true ) ) {
-            $location = isset( $options['auto_insert'] ) ? $options['auto_insert'] : 'none';
+            
+            $location = ! empty( $options['auto_inject'] ) ? $options['auto_inject'] : 'none';
+
+            if ( strpos( $content, 'wprte-reading-time' ) !== false ) {
+                return $content;
+            }
+
+            // error_log( sprintf( 'WPRTE inject: location=%s, post_type=%s', $location, $post_type ) );
 
             if ( $location === 'before' ) {
-                return '<div class="reading-time">' . wp_reading_time() . '</div>' . $content;
+                return '<div class="wprte-reading-time">' . wp_reading_time() . '</div>' . $content;
             } elseif ( $location === 'after' ) {
-                return $content . '<div class="reading-time">' . wp_reading_time() . '</div>';
+                return $content . '<div class="wprte-reading-time">' . wp_reading_time() . '</div>';
             }
         }
     }
@@ -83,12 +92,12 @@ add_filter( 'the_content', function( $content ) {
     return $content;
 });
 
+
 // Shortcode [reading_time]
-add_shortcode( 'reading_time', function( $atts ) {
-    $atts = shortcode_atts( array(
-        'id' => get_the_ID(),
-    ), $atts, 'reading_time' );
+// add_shortcode( 'reading_time', function( $atts ) {
+//     $atts = shortcode_atts( array(
+//         'id' => get_the_ID(),
+//     ), $atts, 'reading_time' );
 
-    return wp_reading_time( $atts['id'] );
-});
-
+//     return wp_reading_time( $atts['id'] );
+// });
