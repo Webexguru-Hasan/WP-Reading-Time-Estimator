@@ -1,0 +1,94 @@
+<?php
+/**
+ * Frontend Logic – Reading Time Calculation
+ * Part of WP Reading Time Estimator
+ */
+
+// Calculate reading time for a post
+function wprte_calculate_reading_time( $post_id ) {
+    $options = get_option( 'wprte_settings', array() );
+
+    $wpm       = ! empty( $options['wpm'] ) ? absint( $options['wpm'] ) : 200;
+    $img_time  = ! empty( $options['image_seconds'] ) ? absint( $options['image_seconds'] ) : 0;
+    $content   = get_post_field( 'post_content', $post_id );
+    $word_count = str_word_count( wp_strip_all_tags( $content ) );
+
+    // Count images
+    $img_count = substr_count( strtolower( $content ), '<img ' );
+
+    // Base minutes
+    $minutes = ceil( $word_count / $wpm );
+
+    // Add seconds from images
+    $extra = ceil( ( $img_count * $img_time ) / 60 );
+
+    $total_minutes = max( 1, $minutes + $extra );
+
+    return $total_minutes;
+}
+
+// Get formatted reading time (with schema if enabled)
+function wp_reading_time( $post_id = null ) {
+    if ( ! $post_id ) {
+        $post_id = get_the_ID();
+    }
+
+    $options = get_option( 'wprte_settings', array() );
+    $minutes = wprte_calculate_reading_time( $post_id );
+
+    // Output format
+    $format = ! empty( $options['output_format'] ) ? $options['output_format'] : '%s min read';
+    $text   = sprintf( $format, $minutes );
+
+    // Add schema markup if enabled
+    if ( ! empty( $options['schema'] ) ) {
+        $text .= sprintf(
+            '<meta itemprop="timeRequired" content="PT%dM" />',
+            $minutes
+        );
+    }
+
+    return esc_html( $text );
+}
+
+// Echo function
+function the_reading_time( $post_id = null ) {
+    echo wp_reading_time( $post_id );
+}
+
+// Auto inject into content
+add_filter( 'the_content', function( $content ) {
+    if ( is_admin() ) {
+        return $content;
+    }
+
+    if ( is_singular() && in_the_loop() && is_main_query() ) {
+        $options = get_option( 'wprte_settings', array() );
+
+        // Check post type
+        $post_type = get_post_type();
+        $enabled_types = ! empty( $options['post_types'] ) ? (array) $options['post_types'] : array( 'post' );
+
+        if ( in_array( $post_type, $enabled_types, true ) ) {
+            $location = isset( $options['auto_insert'] ) ? $options['auto_insert'] : 'none';
+
+            if ( $location === 'before' ) {
+                return '<div class="reading-time">' . wp_reading_time() . '</div>' . $content;
+            } elseif ( $location === 'after' ) {
+                return $content . '<div class="reading-time">' . wp_reading_time() . '</div>';
+            }
+        }
+    }
+
+    return $content;
+});
+
+// Shortcode [reading_time]
+add_shortcode( 'reading_time', function( $atts ) {
+    $atts = shortcode_atts( array(
+        'id' => get_the_ID(),
+    ), $atts, 'reading_time' );
+
+    return wp_reading_time( $atts['id'] );
+});
+

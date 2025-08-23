@@ -72,6 +72,8 @@ if ( is_admin() ) {
     require_once plugin_dir_path( __FILE__ ) . 'admin/settings-page.php';
 }
 
+require_once plugin_dir_path( __FILE__ ) . 'includes/frontend.php';
+
 
 /**
 * Load plugin textdomain for translations
