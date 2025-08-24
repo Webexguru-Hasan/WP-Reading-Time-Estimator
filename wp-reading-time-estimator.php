@@ -66,6 +66,9 @@ require_once WPRTE_PATH . $map[ $class ];
 register_activation_hook( __FILE__, array( 'WPRTE_Activator', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'WPRTE_Deactivator', 'deactivate' ) );
 register_uninstall_hook( __FILE__, array( 'WPRTE_Uninstaller', 'uninstall' ) );
+// Load shortcode
+require_once WPRTE_PATH . 'includes/shortcode.php';
+
 
 // Load Admin Settings Page
 if ( is_admin() ) {
