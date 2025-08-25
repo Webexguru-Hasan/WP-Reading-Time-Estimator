@@ -11,3 +11,8 @@ add_shortcode( 'reading_time', function( $atts ) {
 
     return wp_reading_time( $atts['id'] );
 });
+
+
+/**
+ * Shortcode: [wprte_progress_bar]
+ */

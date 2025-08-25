@@ -1,0 +1,25 @@
+#wprte-progress {
+  position: fixed;
+  left: 0;
+  z-index: 9999;
+  background: transparent;
+  right: 0;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+#wprte-progress.top {
+  top: 15px;
+}
+
+#wprte-progress.bottom {
+  bottom: 0;
+}
+
+#wprte-progress .wprte-progress-bar {
+  display: block;
+  height: var(--wprte-height, 3px);
+  width: 0%;
+  background-color: var(--wprte-color, #3b82f6);
+  transition: width 0.25s linear;
+}

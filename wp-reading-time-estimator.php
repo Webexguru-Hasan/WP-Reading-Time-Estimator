@@ -68,6 +68,8 @@ register_deactivation_hook( __FILE__, array( 'WPRTE_Deactivator', 'deactivate' )
 register_uninstall_hook( __FILE__, array( 'WPRTE_Uninstaller', 'uninstall' ) );
 // Load shortcode
 require_once WPRTE_PATH . 'includes/shortcode.php';
+require_once plugin_dir_path( __FILE__ ) . 'public/progress-bar.php';
+
 
 
 // Load Admin Settings Page

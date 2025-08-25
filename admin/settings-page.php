@@ -27,9 +27,9 @@ function wprte_render_settings_page_content() {
 
         <hr />
 
-        <!-- Shortcode Section -->
-        <h2><?php esc_html_e( 'Shortcode', 'wp-reading-time-estimator' ); ?></h2>
-        <p><?php esc_html_e( 'You can display the reading time anywhere using this shortcode:', 'wp-reading-time-estimator' ); ?></p>
+        <!-- Shortcode Section for Reading time estimator-->
+        <h2><?php esc_html_e( 'Shortcode for Reading Time', 'wp-reading-time-estimator' ); ?></h2>
+        <p><?php esc_html_e( 'You can display the reading time anywhere using this shortcode. also before using shortcode please make "Auto-inject Location" None', 'wp-reading-time-estimator' ); ?></p>
 
         <div style="background:#f9f9f9; border:1px solid #ddd; padding:5px; border-radius:6px; display:inline-block;">
             <code>[reading_time]</code>
@@ -37,7 +37,10 @@ function wprte_render_settings_page_content() {
                 onclick="navigator.clipboard.writeText('[reading_time]'); alert('Shortcode copied!');">
                 <?php esc_html_e( 'Copy', 'wp-reading-time-estimator' ); ?>
             </button>
+            
         </div>
+
+
     </div>
     <?php
 }
@@ -116,6 +119,52 @@ function wprte_register_settings() {
         'wprte-settings',
         'wprte_general_section'
     );
+
+//Prograss Bar---------
+    // Section: Progress Bar
+add_settings_section(
+    'wprte_progress_section',
+    __( 'Reading Progress Bar', 'wp-reading-time-estimator' ),
+    '__return_false',
+    'wprte-settings'
+);
+
+// Field: Enable
+add_settings_field(
+    'wprte_progress_enable',
+    __( 'Enable Progress Bar', 'wp-reading-time-estimator' ),
+    'wprte_field_progress_enable',
+    'wprte-settings',
+    'wprte_progress_section'
+);
+
+// Field: Position
+add_settings_field(
+    'wprte_progress_position',
+    __( 'Position', 'wp-reading-time-estimator' ),
+    'wprte_field_progress_position',
+    'wprte-settings',
+    'wprte_progress_section'
+);
+
+// Field: Height
+add_settings_field(
+    'wprte_progress_height',
+    __( 'Height (px)', 'wp-reading-time-estimator' ),
+    'wprte_field_progress_height',
+    'wprte-settings',
+    'wprte_progress_section'
+);
+
+// Field: Color
+add_settings_field(
+    'wprte_progress_color',
+    __( 'Bar Color', 'wp-reading-time-estimator' ),
+    'wprte_field_progress_color',
+    'wprte-settings',
+    'wprte_progress_section'
+);
+
 }
 
 /**
@@ -126,15 +175,26 @@ function wprte_register_settings() {
 function wprte_sanitize_settings( $input ) {
     $output = array();
 
+    // General
     $output['post_types']          = array_map( 'sanitize_text_field', (array) ( $input['post_types'] ?? array() ) );
     $output['reading_speed']       = absint( $input['reading_speed'] ?? 200 );
     $output['extra_seconds_image'] = absint( $input['extra_seconds_image'] ?? 10 );
-    $output['auto_inject']         = in_array( $input['auto_inject'], array( 'before', 'after', 'none' ), true ) ? $input['auto_inject'] : 'none';
+    $output['auto_inject']         = in_array( $input['auto_inject'] ?? 'none', array( 'before', 'after', 'none' ), true ) ? $input['auto_inject'] : 'none';
     $output['output_format']       = sanitize_text_field( $input['output_format'] ?? '%s min read' );
     $output['enable_schema']       = ! empty( $input['enable_schema'] ) ? 1 : 0;
 
+    // Progress Bar (IMPORTANT: keep this BEFORE the return)
+    $output['progress_enable']    = ! empty( $input['progress_enable'] ) ? 1 : 0;
+    $pos                          = $input['progress_position'] ?? 'top';
+    $output['progress_position']  = in_array( $pos, array( 'top', 'bottom' ), true ) ? $pos : 'top';
+    $output['progress_height']    = max( 1, absint( $input['progress_height'] ?? 3 ) );
+    $color                        = $input['progress_color'] ?? '#3b82f6';
+    $output['progress_color']     = sanitize_hex_color( $color ) ?: '#3b82f6';
+
     return $output;
 }
+
+
 
 /**
  * ================================
@@ -203,6 +263,47 @@ function wprte_field_enable_schema() {
         <input type="checkbox" name="wprte_settings[enable_schema]" value="1" <?php checked( $value ); ?>>
         <?php _e( 'Add schema.org timeRequired markup', 'wp-reading-time-estimator' ); ?>
     </label>
+    <?php
+}
+
+
+//Progress Bar
+function wprte_field_progress_enable() {
+    $o = get_option( 'wprte_settings' );
+    $val = ! empty( $o['progress_enable'] );
+    ?>
+    <label>
+        <input type="checkbox" name="wprte_settings[progress_enable]" value="1" <?php checked( $val ); ?>>
+        <?php esc_html_e( 'Show a small reading progress bar on single posts/pages.', 'wp-reading-time-estimator' ); ?>
+    </label>
+    <?php
+}
+
+function wprte_field_progress_position() {
+    $o = get_option( 'wprte_settings' );
+    $val = $o['progress_position'] ?? 'top';
+    ?>
+    <select name="wprte_settings[progress_position]">
+        <option value="top" <?php selected( $val, 'top' ); ?>><?php esc_html_e( 'Top', 'wp-reading-time-estimator' ); ?></option>
+        <option value="bottom" <?php selected( $val, 'bottom' ); ?>><?php esc_html_e( 'Bottom', 'wp-reading-time-estimator' ); ?></option>
+    </select>
+    <?php
+}
+
+function wprte_field_progress_height() {
+    $o = get_option( 'wprte_settings' );
+    $val = $o['progress_height'] ?? 3;
+    ?>
+    <input type="number" min="1" step="1" name="wprte_settings[progress_height]" value="<?php echo esc_attr( $val ); ?>" style="width:80px;">
+    <?php
+}
+
+function wprte_field_progress_color() {
+    $o = get_option( 'wprte_settings' );
+    $val = $o['progress_color'] ?? '#3b82f6';
+    ?>
+    <input type="text" name="wprte_settings[progress_color]" value="<?php echo esc_attr( $val ); ?>" class="regular-text" placeholder="#3b82f6">
+    <p class="description"><?php esc_html_e( 'Use a HEX color (e.g., #3b82f6).', 'wp-reading-time-estimator' ); ?></p>
     <?php
 }
 
